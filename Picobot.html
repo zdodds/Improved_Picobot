@@ -263,4 +263,72 @@ Welcome to Picobot!
 
 
 
+<script>
+// Reorganize controls into the lower-left panel and keep only the canvas in the world panel.
+document.addEventListener('DOMContentLoaded', function() {
+  var controlsPanel = document.getElementById('panel-controls');
+  if (!controlsPanel) return;
+
+  // Helper to move the closest table (or ancestor) that contains the element
+  function moveAncestorTable(el) {
+    if (!el) return;
+    var table = el.closest ? el.closest('table') : null;
+    if (!table) table = el.parentElement;
+    if (table && table.parentElement && !controlsPanel.contains(table)) {
+      controlsPanel.appendChild(table);
+    }
+  }
+
+  // Move main control buttons by name
+  var names = ['Go','Stop','Step','Reset','West','East','North','South'];
+  names.forEach(function(n){
+    var btn = document.querySelector('input[name="'+n+'"]');
+    if (btn) moveAncestorTable(btn);
+  });
+
+  // Move speed/rate control if present (by id or label)
+  var rate = document.getElementById('rate') || document.getElementById('speed-slider') || document.querySelector('[name="speed"]');
+  if (rate) {
+    moveAncestorTable(rate);
+  }
+
+  // Move teleport / prev/next / map selector tables by searching for their text
+  var keywords = ['Teleport Robot','Previous Rule','Next Rule','Teleport','Map','Be sure to hit "Enter rules"'];
+  Array.from(document.querySelectorAll('table')).forEach(function(tbl){
+    try {
+      var txt = tbl.textContent || '';
+      for (var i=0;i<keywords.length;i++) {
+        if (txt.indexOf(keywords[i]) !== -1) {
+          if (!controlsPanel.contains(tbl)) controlsPanel.appendChild(tbl);
+          break;
+        }
+      }
+    } catch(e){}
+  });
+
+  // Remove duplicate right-side title and Enter button (they're redundant with the header)
+  var calcForm = document.forms['calc'];
+  if (calcForm) {
+    var headerH1 = calcForm.querySelector('h1');
+    if (headerH1) headerH1.parentElement && headerH1.parentElement.removeChild(headerH1);
+    var addBtn = calcForm.querySelector('input[name="add"]');
+    if (addBtn) addBtn.parentElement && addBtn.parentElement.removeChild(addBtn);
+  }
+
+  // Ensure panel-world-area contains only the title and myCanvas
+  var panelWorld = document.getElementById('panel-world-area');
+  var myCanvas = document.getElementById('myCanvas');
+  if (panelWorld && myCanvas) {
+    // move any non-title children into controls
+    Array.from(panelWorld.children).forEach(function(ch){
+      if (!ch.classList || ch.classList.contains('panel-title')) return;
+      if (ch.id !== 'myCanvas') {
+        controlsPanel.appendChild(ch);
+      }
+    });
+    // make sure myCanvas is a child
+    if (myCanvas.parentElement !== panelWorld) panelWorld.appendChild(myCanvas);
+  }
+});
+</script>
 </body></html>
