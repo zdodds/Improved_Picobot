@@ -12,6 +12,8 @@ body { font-family: Arial, Helvetica, sans-serif; margin: 0; padding: 8px; backg
 body { padding-top: 72px; /* leave space for header */ }
 #panel-world-area { position: absolute; top: 72px; left: 8px; width: calc(50% - 16px); height: calc(50vh - 88px); border: 3px solid #0b63c6; box-shadow: 0 0 0 2px #a9d1ff inset; background: white; overflow: auto; z-index: 10; }
 #panel-controls { position: absolute; top: calc(50vh + 8px); left: 8px; width: calc(50% - 16px); height: calc(50vh - 24px); background: #f3f3b0; border: 2px solid #cfcf70; overflow: auto; padding: 8px; box-sizing: border-box; z-index: 10; }
+/* New dedicated lower-left panel to host all controls. */
+#panel-controls-lower { position: absolute; top: calc(50vh + 8px); left: 8px; width: calc(50% - 16px); height: calc(50vh - 24px); background: rgba(243,243,176,0.98); border: 2px solid #cfcf70; overflow: auto; padding: 12px; box-sizing: border-box; z-index: 20; }
 #panel-rules { position: absolute; top: 72px; right: 8px; width: calc(50% - 16px); height: calc(50vh - 88px); box-sizing: border-box; border: 2px solid #444; background: #fff; overflow: auto; z-index: 10; }
 #rules { box-sizing: border-box; width: 100%; height: calc(100% - 40px); border: none; padding: 8px; font-family: courier; font-weight: bold; resize: none; }
 #panel-messages { position: absolute; top: calc(50vh + 8px); right: 8px; width: calc(50% - 16px); height: calc(50vh - 24px); background: #fff7e6; border: 2px solid #e0c98a; overflow: auto; box-sizing: border-box; padding: 8px; z-index: 10; }
@@ -264,44 +266,64 @@ Welcome to Picobot!
 
 
 <script>
-// Reorganize controls into the lower-left panel and keep only the canvas in the world panel.
+// Reorganize controls into a new opaque lower-left panel and keep only the canvas in the world panel.
+// This finds the Speed display and associated tables and moves them into #panel-controls-lower.
+
 document.addEventListener('DOMContentLoaded', function() {
-  var controlsPanel = document.getElementById('panel-controls');
-  if (!controlsPanel) return;
+  // create or get our destination lower-left panel
+  var dest = document.getElementById('panel-controls-lower');
+  if (!dest) {
+    dest = document.createElement('div');
+    dest.id = 'panel-controls-lower';
+    dest.className = 'panel';
+    // optional title
+    var t = document.createElement('div'); t.className = 'panel-title'; t.textContent = 'Controls'; dest.appendChild(t);
+    document.body.appendChild(dest);
+  }
 
-  // Helper to move the closest table (or ancestor) that contains the element
-  function moveAncestorTable(el) {
+  // helper to move an element (or its closest table/div wrapper) into dest
+  function moveBlock(el) {
     if (!el) return;
-    var table = el.closest ? el.closest('table') : null;
-    if (!table) table = el.parentElement;
-    if (table && table.parentElement && !controlsPanel.contains(table)) {
-      controlsPanel.appendChild(table);
-    }
+    var block = el.closest ? (el.closest('table') || el.closest('div') || el) : el.parentElement;
+    if (!block) block = el;
+    if (block && !dest.contains(block)) dest.appendChild(block);
   }
 
-  // Move main control buttons by name
-  var names = ['Go','Stop','Step','Reset','West','East','North','South'];
-  names.forEach(function(n){
-    var btn = document.querySelector('input[name="'+n+'"]');
-    if (btn) moveAncestorTable(btn);
-  });
-
-  // Move speed/rate control if present (by id or label)
-  var rate = document.getElementById('rate') || document.getElementById('speed-slider') || document.querySelector('[name="speed"]');
+  // Find the Speed display (unique string) and move its surrounding blocks
+  var rate = document.getElementById('rate');
   if (rate) {
-    moveAncestorTable(rate);
+    // move the rate div and the slider container
+    moveBlock(rate);
+    var slider = document.getElementById('speed-slider');
+    moveBlock(slider);
   }
 
-  // Move teleport / prev/next / map selector tables by searching for their text
-  var keywords = ['Teleport Robot','Previous Rule','Next Rule','Teleport','Map','Be sure to hit "Enter rules"'];
+  // Move the main Go/Stop/Step/Reset table
+  var goBtn = document.querySelector('input[name="Go"]');
+  if (goBtn) moveBlock(goBtn);
+
+  // Move the Map selectors table
+  var mapMinus = document.querySelector('input[name="Map-"]');
+  if (mapMinus) moveBlock(mapMinus);
+
+  // Move the state/progress table
+  var stateEl = document.getElementById('state') || document.getElementById('progress');
+  if (stateEl) moveBlock(stateEl);
+
+  // Move prev/next rules table
+  var cur = document.getElementById('currentrule');
+  if (cur) moveBlock(cur);
+
+  // Move teleport buttons
+  var west = document.querySelector('input[name="West"]');
+  if (west) moveBlock(west);
+
+  // Heuristic: move any small gold-background tables to the dest (they are the controls)
   Array.from(document.querySelectorAll('table')).forEach(function(tbl){
     try {
-      var txt = tbl.textContent || '';
-      for (var i=0;i<keywords.length;i++) {
-        if (txt.indexOf(keywords[i]) !== -1) {
-          if (!controlsPanel.contains(tbl)) controlsPanel.appendChild(tbl);
-          break;
-        }
+      var style = tbl.getAttribute('style') || '';
+      if (style.indexOf('rgb(238, 238, 170)') !== -1 || (tbl.textContent && tbl.textContent.indexOf('Teleport Robot') !== -1) || tbl.querySelector('input[name="Go"]')) {
+        if (!dest.contains(tbl)) dest.appendChild(tbl);
       }
     } catch(e){}
   });
@@ -319,16 +341,17 @@ document.addEventListener('DOMContentLoaded', function() {
   var panelWorld = document.getElementById('panel-world-area');
   var myCanvas = document.getElementById('myCanvas');
   if (panelWorld && myCanvas) {
-    // move any non-title children into controls
+    // move any non-title children into dest
     Array.from(panelWorld.children).forEach(function(ch){
       if (!ch.classList || ch.classList.contains('panel-title')) return;
       if (ch.id !== 'myCanvas') {
-        controlsPanel.appendChild(ch);
+        if (!dest.contains(ch)) dest.appendChild(ch);
       }
     });
-    // make sure myCanvas is a child
+    // ensure myCanvas is present inside the world panel
     if (myCanvas.parentElement !== panelWorld) panelWorld.appendChild(myCanvas);
   }
+
 });
 </script>
 </body></html>
