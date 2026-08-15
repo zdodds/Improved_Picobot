@@ -5,6 +5,11 @@
 <title>Picobot</title>
 <style>
 body { font-family: Arial, Helvetica, sans-serif; margin: 0; padding: 8px; background: #e1e1e1; }
+/* Four quadrant panels with distinct background colors */
+#quad-upper-left { position: absolute; top: 72px; left: 8px; width: calc(50% - 16px); height: calc(50vh - 88px); border: 3px solid #0b63c6; background: #cce5ff; overflow: auto; box-sizing: border-box; z-index: 5; }
+#quad-upper-right { position: absolute; top: 72px; right: 8px; width: calc(50% - 16px); height: calc(50vh - 88px); border: 2px solid #444; background: #fffacd; overflow: auto; box-sizing: border-box; z-index: 5; }
+#quad-lower-left { position: absolute; top: calc(50vh + 8px); left: 8px; width: calc(50% - 16px); height: calc(50vh - 24px); border: 2px solid #cfcf70; background: #ffffe0; overflow: auto; box-sizing: border-box; z-index: 5; }
+#quad-lower-right { position: absolute; top: calc(50vh + 8px); right: 8px; width: calc(50% - 16px); height: calc(50vh - 24px); border: 2px solid #e0c98a; background: #ffe4b5; overflow: auto; box-sizing: border-box; z-index: 5; }
 /* quadrant layout using absolute positioning so we don't alter existing DOM deeply */
 #header { position: fixed; top: 0; left: 0; right: 0; height: 56px; background: #ffffffcc; display:flex; align-items:center; justify-content:space-between; padding: 8px 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); z-index: 9999; }
 #header h1 { margin: 0; font-size: 20px; }
@@ -266,92 +271,26 @@ Welcome to Picobot!
 
 
 <script>
-// Reorganize controls into a new opaque lower-left panel and keep only the canvas in the world panel.
-// This finds the Speed display and associated tables and moves them into #panel-controls-lower.
-
+// Create four visible quadrant panels with distinct colors.
+// Everything else stays as-is for now.
 document.addEventListener('DOMContentLoaded', function() {
-  // create or get our destination lower-left panel
-  var dest = document.getElementById('panel-controls-lower');
-  if (!dest) {
-    dest = document.createElement('div');
-    dest.id = 'panel-controls-lower';
-    dest.className = 'panel';
-    // optional title
-    var t = document.createElement('div'); t.className = 'panel-title'; t.textContent = 'Controls'; dest.appendChild(t);
-    document.body.appendChild(dest);
-  }
-
-  // helper to move an element (or its closest table/div wrapper) into dest
-  function moveBlock(el) {
-    if (!el) return;
-    var block = el.closest ? (el.closest('table') || el.closest('div') || el) : el.parentElement;
-    if (!block) block = el;
-    if (block && !dest.contains(block)) dest.appendChild(block);
-  }
-
-  // Find the Speed display (unique string) and move its surrounding blocks
-  var rate = document.getElementById('rate');
-  if (rate) {
-    // move the rate div and the slider container
-    moveBlock(rate);
-    var slider = document.getElementById('speed-slider');
-    moveBlock(slider);
-  }
-
-  // Move the main Go/Stop/Step/Reset table
-  var goBtn = document.querySelector('input[name="Go"]');
-  if (goBtn) moveBlock(goBtn);
-
-  // Move the Map selectors table
-  var mapMinus = document.querySelector('input[name="Map-"]');
-  if (mapMinus) moveBlock(mapMinus);
-
-  // Move the state/progress table
-  var stateEl = document.getElementById('state') || document.getElementById('progress');
-  if (stateEl) moveBlock(stateEl);
-
-  // Move prev/next rules table
-  var cur = document.getElementById('currentrule');
-  if (cur) moveBlock(cur);
-
-  // Move teleport buttons
-  var west = document.querySelector('input[name="West"]');
-  if (west) moveBlock(west);
-
-  // Heuristic: move any small gold-background tables to the dest (they are the controls)
-  Array.from(document.querySelectorAll('table')).forEach(function(tbl){
-    try {
-      var style = tbl.getAttribute('style') || '';
-      if (style.indexOf('rgb(238, 238, 170)') !== -1 || (tbl.textContent && tbl.textContent.indexOf('Teleport Robot') !== -1) || tbl.querySelector('input[name="Go"]')) {
-        if (!dest.contains(tbl)) dest.appendChild(tbl);
-      }
-    } catch(e){}
+  // Create the four quadrant panels if they don't exist
+  var quads = [
+    { id: 'quad-upper-left', label: 'Upper-Left' },
+    { id: 'quad-upper-right', label: 'Upper-Right' },
+    { id: 'quad-lower-left', label: 'Lower-Left' },
+    { id: 'quad-lower-right', label: 'Lower-Right' }
+  ];
+  
+  quads.forEach(function(q) {
+    if (!document.getElementById(q.id)) {
+      var div = document.createElement('div');
+      div.id = q.id;
+      div.textContent = q.label;
+      div.style.cssText = 'display: flex; align-items: center; justify-content: center; font-weight: bold; color: #666;';
+      document.body.appendChild(div);
+    }
   });
-
-  // Remove duplicate right-side title and Enter button (they're redundant with the header)
-  var calcForm = document.forms['calc'];
-  if (calcForm) {
-    var headerH1 = calcForm.querySelector('h1');
-    if (headerH1) headerH1.parentElement && headerH1.parentElement.removeChild(headerH1);
-    var addBtn = calcForm.querySelector('input[name="add"]');
-    if (addBtn) addBtn.parentElement && addBtn.parentElement.removeChild(addBtn);
-  }
-
-  // Ensure panel-world-area contains only the title and myCanvas
-  var panelWorld = document.getElementById('panel-world-area');
-  var myCanvas = document.getElementById('myCanvas');
-  if (panelWorld && myCanvas) {
-    // move any non-title children into dest
-    Array.from(panelWorld.children).forEach(function(ch){
-      if (!ch.classList || ch.classList.contains('panel-title')) return;
-      if (ch.id !== 'myCanvas') {
-        if (!dest.contains(ch)) dest.appendChild(ch);
-      }
-    });
-    // ensure myCanvas is present inside the world panel
-    if (myCanvas.parentElement !== panelWorld) panelWorld.appendChild(myCanvas);
-  }
-
 });
 </script>
 </body></html>
