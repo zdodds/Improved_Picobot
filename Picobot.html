@@ -272,7 +272,7 @@ Welcome to Picobot!
 
 <script>
 // Create four visible quadrant panels with distinct colors.
-// Move the "Go" button to the lower-left panel.
+// Organize lower-left controls into rows: buttons, slider, info fields, directional buttons.
 document.addEventListener('DOMContentLoaded', function() {
   // Create the four quadrant panels if they don't exist
   var quads = [
@@ -292,13 +292,93 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
-  // Move the Go button to the lower-left panel
-  var goBtn = document.querySelector('input[name="Go"]');
   var lowerLeft = document.getElementById('quad-lower-left');
-  if (goBtn && lowerLeft) {
-    lowerLeft.textContent = ''; // clear the label
-    lowerLeft.appendChild(goBtn);
+  if (!lowerLeft) return;
+
+  // Clear the label on first load
+  if (lowerLeft.textContent === 'Lower-Left') {
+    lowerLeft.textContent = '';
   }
+
+  // Add title "Control Panel" at the top
+  var title = document.createElement('div');
+  title.textContent = 'Control Panel';
+  title.style.cssText = 'font-weight: bold; font-size: 16px; margin-bottom: 12px; width: 100%;';
+  lowerLeft.appendChild(title);
+
+  // Set flex column layout for the panel
+  lowerLeft.style.display = 'flex';
+  lowerLeft.style.flexDirection = 'column';
+  lowerLeft.style.gap = '10px';
+
+  // Row 1: Go, Stop, Step, Reset buttons
+  var row1 = document.createElement('div');
+  row1.style.cssText = 'display: flex; gap: 8px; justify-content: flex-start; flex-wrap: wrap;';
+  
+  var buttonNames = ['Go', 'Stop', 'Step', 'Reset'];
+  buttonNames.forEach(function(name) {
+    var btn = document.querySelector('input[name="' + name + '"]');
+    if (btn) {
+      var btnClone = btn.cloneNode(true);
+      row1.appendChild(btnClone);
+    }
+  });
+  lowerLeft.appendChild(row1);
+
+  // Row 2: Speed slider
+  var row2 = document.createElement('div');
+  row2.style.cssText = 'display: flex; gap: 8px; align-items: center;';
+  row2.textContent = 'Speed: ';
+  
+  var slider = document.getElementById('speed-slider');
+  if (slider) {
+    var sliderClone = slider.cloneNode(true);
+    row2.appendChild(sliderClone);
+  }
+  lowerLeft.appendChild(row2);
+
+  // Row 3: Info textareas and labels (state, surroundings, progress)
+  var row3 = document.createElement('div');
+  row3.style.cssText = 'display: flex; gap: 12px; justify-content: flex-start; flex-wrap: wrap;';
+
+  var infoFields = [
+    { id: 'state', label: 'State' },
+    { id: 'surroundings', label: 'Surroundings' },
+    { id: 'progress', label: 'Cells to go' }
+  ];
+
+  infoFields.forEach(function(field) {
+    var textarea = document.getElementById(field.id);
+    if (textarea) {
+      var container = document.createElement('div');
+      container.style.cssText = 'display: flex; flex-direction: column; align-items: center;';
+      
+      var taClone = textarea.cloneNode(true);
+      container.appendChild(taClone);
+
+      var label = document.createElement('div');
+      label.textContent = field.label;
+      label.style.cssText = 'font-size: 11px; color: #666; margin-top: 2px;';
+      container.appendChild(label);
+
+      row3.appendChild(container);
+    }
+  });
+  lowerLeft.appendChild(row3);
+
+  // Row 4: Directional buttons (West, East, North, South)
+  var row4 = document.createElement('div');
+  row4.style.cssText = 'display: flex; gap: 8px; justify-content: flex-start; flex-wrap: wrap;';
+
+  var dirButtons = ['West', 'East', 'North', 'South'];
+  dirButtons.forEach(function(dir) {
+    var btn = document.querySelector('input[name="' + dir + '"]');
+    if (btn) {
+      var btnClone = btn.cloneNode(true);
+      row4.appendChild(btnClone);
+    }
+  });
+  lowerLeft.appendChild(row4);
 });
 </script>
 </body></html>
