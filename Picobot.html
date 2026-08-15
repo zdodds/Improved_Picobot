@@ -271,9 +271,10 @@ Welcome to Picobot!
 
 
 <script>
-// Create four visible quadrant panels with distinct colors.
-// Organize lower-left controls into rows: buttons, slider, info fields, directional buttons.
-// Remove original controls after copying them.
+// Create four visible quadrant panels.
+// Move key elements (canvas, rules, messages) to their quadrants.
+// Organize controls in lower-left, and clean up old control tables only.
+// IMPORTANT: Move (not clone) speed-slider to preserve engine.js event listener.
 document.addEventListener('DOMContentLoaded', function() {
   // Create the four quadrant panels if they don't exist
   var quads = [
@@ -288,16 +289,39 @@ document.addEventListener('DOMContentLoaded', function() {
       var div = document.createElement('div');
       div.id = q.id;
       div.textContent = q.label;
-      div.style.cssText = 'display: flex; align-items: center; justify-content: center; font-weight: bold; color: #666;';
+      div.style.cssText = 'display: flex; align-items: center; justify-content: center; font-weight: bold; color: #666; flex-direction: column;';
       document.body.appendChild(div);
     }
   });
 
+  var upperLeft = document.getElementById('quad-upper-left');
+  var upperRight = document.getElementById('quad-upper-right');
   var lowerLeft = document.getElementById('quad-lower-left');
-  if (!lowerLeft) return;
+  var lowerRight = document.getElementById('quad-lower-right');
 
-  // Clear the label on first load
-  if (lowerLeft.textContent === 'Lower-Left') {
+  // Move myCanvas to upper-left
+  var myCanvas = document.getElementById('myCanvas');
+  if (myCanvas && upperLeft && !upperLeft.contains(myCanvas)) {
+    upperLeft.textContent = ''; // clear label
+    upperLeft.appendChild(myCanvas);
+  }
+
+  // Move rules textarea to upper-right
+  var rulesTA = document.getElementById('rules');
+  if (rulesTA && upperRight && !upperRight.contains(rulesTA)) {
+    upperRight.textContent = ''; // clear label
+    upperRight.appendChild(rulesTA);
+  }
+
+  // Move mesg textarea to lower-right
+  var msgTA = document.getElementById('mesg');
+  if (msgTA && lowerRight && !lowerRight.contains(msgTA)) {
+    lowerRight.textContent = ''; // clear label
+    lowerRight.appendChild(msgTA);
+  }
+
+  // Now organize controls in lower-left
+  if (lowerLeft && lowerLeft.textContent === 'Lower-Left') {
     lowerLeft.textContent = '';
   }
 
@@ -326,15 +350,14 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   lowerLeft.appendChild(row1);
 
-  // Row 2: Speed slider
+  // Row 2: Speed slider (MOVE, don't clone, to preserve engine.js event listener)
   var row2 = document.createElement('div');
   row2.style.cssText = 'display: flex; gap: 8px; align-items: center;';
   row2.textContent = 'Speed: ';
   
   var slider = document.getElementById('speed-slider');
-  if (slider) {
-    var sliderClone = slider.cloneNode(true);
-    row2.appendChild(sliderClone);
+  if (slider && !lowerLeft.contains(slider)) {
+    row2.appendChild(slider);  // MOVE the original
   }
   lowerLeft.appendChild(row2);
 
@@ -381,26 +404,25 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   lowerLeft.appendChild(row4);
 
-  // Now remove the original elements (they're now in the lower-left, so only remove the originals)
-  // Remove control button tables/containers that wrap them
+  // Remove only the old control tables (not myCanvas, rules, or mesg)
   Array.from(document.querySelectorAll('table')).forEach(function(tbl) {
     try {
       var txt = tbl.textContent || '';
-      // Check if this table contains the original control buttons and is NOT in the lower-left
+      // Only remove control-related tables
       if ((txt.indexOf('Go') !== -1 && txt.indexOf('Stop') !== -1) || 
           (txt.indexOf('Teleport Robot') !== -1) ||
           (txt.indexOf('Previous Rule') !== -1 && txt.indexOf('Next Rule') !== -1) ||
-          (txt.indexOf('State') !== -1 && txt.indexOf('Surroundings') !== -1)) {
-        if (!lowerLeft.contains(tbl)) {
-          tbl.parentElement && tbl.parentElement.removeChild(tbl);
+          (txt.indexOf('State') !== -1 && txt.indexOf('Surroundings') !== -1 && txt.indexOf('Cells to go') !== -1)) {
+        if (tbl.parentElement) {
+          tbl.parentElement.removeChild(tbl);
         }
       }
     } catch(e){}
   });
 
-  // Remove the speed slider container (div with rate display)
+  // Remove the speed slider container (div with rate display) only if the slider has been moved out
   var rateDiv = document.getElementById('rate');
-  if (rateDiv && !lowerLeft.contains(rateDiv) && rateDiv.parentElement) {
+  if (rateDiv && rateDiv.parentElement && !rateDiv.contains(slider)) {
     rateDiv.parentElement.removeChild(rateDiv);
   }
 });
