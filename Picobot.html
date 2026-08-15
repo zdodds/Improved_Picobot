@@ -3,6 +3,19 @@
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
 
 <title>Picobot</title>
+<style>
+body { font-family: Arial, Helvetica, sans-serif; margin: 0; padding: 8px; background: #e1e1e1; }
+table:first-of-type { width: 100%; height: calc(100vh - 40px); border-collapse: collapse; }
+table:first-of-type td { vertical-align: top; width: 50%; padding: 8px; }
+/* make left and right columns act like stacked panels */
+table:first-of-type td:first-child, table:first-of-type td:last-child { display: flex; flex-direction: column; gap: 8px; }
+#myCanvas { margin: 0 auto; border: 3px solid #0b63c6; box-shadow: 0 0 0 2px #a9d1ff inset; }
+.panel-title { text-align: center; font-weight: bold; margin: 6px 0; }
+#rules, #mesg { box-sizing: border-box; width: 100%; }
+#rules { height: calc(100% - 120px); }
+#mesg { height: 200px; }
+#panel-world { display: flex; flex-direction: column; align-items: center; }
+</style>
 </head>
 
 <body body="" bgcolor="#e1e1e1">
@@ -17,6 +30,7 @@
 <tr>
 
 	<td>
+		<div class="panel-title">World</div>
 		<!-- Here, we build the board! Using sexy javascript! -->
 		<script language="JavaScript" type="text/javascript">
 
@@ -80,6 +94,8 @@
 				</tbody>
 
 			</table>
+
+			<div class="panel-title">Controls</div>
 
 			<div style="text-align: center; margin: 0.5rem;">
 
