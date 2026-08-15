@@ -273,6 +273,7 @@ Welcome to Picobot!
 <script>
 // Create four visible quadrant panels with distinct colors.
 // Organize lower-left controls into rows: buttons, slider, info fields, directional buttons.
+// Remove original controls after copying them.
 document.addEventListener('DOMContentLoaded', function() {
   // Create the four quadrant panels if they don't exist
   var quads = [
@@ -379,6 +380,29 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
   lowerLeft.appendChild(row4);
+
+  // Now remove the original elements (they're now in the lower-left, so only remove the originals)
+  // Remove control button tables/containers that wrap them
+  Array.from(document.querySelectorAll('table')).forEach(function(tbl) {
+    try {
+      var txt = tbl.textContent || '';
+      // Check if this table contains the original control buttons and is NOT in the lower-left
+      if ((txt.indexOf('Go') !== -1 && txt.indexOf('Stop') !== -1) || 
+          (txt.indexOf('Teleport Robot') !== -1) ||
+          (txt.indexOf('Previous Rule') !== -1 && txt.indexOf('Next Rule') !== -1) ||
+          (txt.indexOf('State') !== -1 && txt.indexOf('Surroundings') !== -1)) {
+        if (!lowerLeft.contains(tbl)) {
+          tbl.parentElement && tbl.parentElement.removeChild(tbl);
+        }
+      }
+    } catch(e){}
+  });
+
+  // Remove the speed slider container (div with rate display)
+  var rateDiv = document.getElementById('rate');
+  if (rateDiv && !lowerLeft.contains(rateDiv) && rateDiv.parentElement) {
+    rateDiv.parentElement.removeChild(rateDiv);
+  }
 });
 </script>
 </body></html>
