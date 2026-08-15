@@ -272,7 +272,7 @@ Welcome to Picobot!
 
 <script>
 // Create four visible quadrant panels with distinct colors.
-// Everything else stays as-is for now.
+// Move the "Go" button to the lower-left panel.
 document.addEventListener('DOMContentLoaded', function() {
   // Create the four quadrant panels if they don't exist
   var quads = [
@@ -291,6 +291,14 @@ document.addEventListener('DOMContentLoaded', function() {
       document.body.appendChild(div);
     }
   });
+
+  // Move the Go button to the lower-left panel
+  var goBtn = document.querySelector('input[name="Go"]');
+  var lowerLeft = document.getElementById('quad-lower-left');
+  if (goBtn && lowerLeft) {
+    lowerLeft.textContent = ''; // clear the label
+    lowerLeft.appendChild(goBtn);
+  }
 });
 </script>
 </body></html>
